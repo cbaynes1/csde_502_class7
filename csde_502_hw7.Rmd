@@ -1,0 +1,149 @@
+---
+title: "CSDE 502 HW 7"
+author: "Colin Baynes (cbaynes@uw.edu)"
+date: "2/22/2021"
+output:
+  bookdown::html_document2:
+    number_sections: yes
+    self_contained: yes
+    code_folding: hide
+    toc: yes
+    toc_float:
+      collapsed: yes
+      smooth_scroll: no
+  html_document:
+    toc: yes
+    df_print: paged
+---
+ 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r, include=F}
+rm(list=ls())
+```
+ 
+# Problem 1
+```{r}
+library(tidyverse)
+library(magrittr)
+library(knitr)
+library(kableExtra)
+library(readstata13)
+library(haven)
+library(curl)
+library(ggplot2)
+```
+```{r, warning=F}
+setwd('C:/Users/Cbayn/Dropbox/CSDE 502/week 7')
+ah_wave1_v1<- read.dta13("21600-0001-Data.dta")
+```
+```{r}
+#creating data frame include five variables on participants' times per week of the following activities: (1) chores, (2) hobbies, (3) television or video games, (4) sports, and (5) exercise
+ah_wave1_v1_subset <- subset(ah_wave1_v1, select = c(AID, H1DA1, H1DA2, H1DA3, H1DA5, H1DA6))
+#create label for data frame itself
+attributes(ah_wave1_v1_subset)$label <- "Add Health Wave I Cohort Members Weekly Activities"
+ah_wave1_v1_subset %>% attributes() %>% extract("label")
+#create as.factor variables
+ah_wave1_v1_subset$UID<-as.factor(ah_wave1_v1_subset$AID)
+ah_wave1_v1_subset$Chores<-as.factor(ah_wave1_v1_subset$H1DA1)
+ah_wave1_v1_subset$Hobbies<-as.factor(ah_wave1_v1_subset$H1DA2)
+ah_wave1_v1_subset$TV<-as.factor(ah_wave1_v1_subset$H1DA3)
+ah_wave1_v1_subset$Sports<-as.factor(ah_wave1_v1_subset$H1DA5)
+ah_wave1_v1_subset$Exercise<-as.factor(ah_wave1_v1_subset$H1DA6)
+ah_wave1_v1_subset <- subset(ah_wave1_v1_subset, select = c(UID, Chores, Hobbies, TV, Sports, Exercise))
+#attributes for the variables
+attributes(ah_wave1_v1_subset$UID)$label <- "Participant Unique Identifier"
+attributes(ah_wave1_v1_subset$Chores)$label <- "Occasions per week of doing chores"
+attributes(ah_wave1_v1_subset$Hobbies)$label <- "Occasions per week of doing hobbies"
+attributes(ah_wave1_v1_subset$TV)$label <- "Occasions per week of watching TV or playing videogames"
+attributes(ah_wave1_v1_subset$Sports)$label <- "Occasions per week of playing sports"
+attributes(ah_wave1_v1_subset$Exercise)$label <- "Occasions per week of doing exercise"
+```
+```{r}
+#send to RDS format
+tmpdir <- Sys.getenv("TEMP")
+saveRDS(object = ah_wave1_v1_subset, file = file.path(tmpdir, "ah_wave1_v1_subset.rds"))
+ah_wave1_v1_subset_rds <- readRDS(file = file.path(tmpdir, "ah_wave1_v1_subset.rds"))
+is(ah_wave1_v1_subset_rds)
+ah_wave1_v1_subset_rds %>% 
+    attributes() %>% 
+    map(~ head(.))
+```
+```{r}
+#Frequency tables
+#chores
+chore_tab <-
+  ah_wave1_v1_subset %>% 
+    group_by(Chores) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week doing chores") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+chore_tab
+#hobbies
+hobby_tab <-
+  ah_wave1_v1_subset %>% 
+    group_by(Hobbies) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week doing hobbies") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+hobby_tab
+#hobbies
+tv_tab <-
+  ah_wave1_v1_subset %>% 
+    group_by(TV) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week watching TV or playing videogames") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+tv_tab
+#sports
+sport_tab <-
+  ah_wave1_v1_subset %>% 
+    group_by(Sports) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week playing sports") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+sport_tab
+#exercise
+exercise_tab <-
+  ah_wave1_v1_subset %>% 
+    group_by(Exercise) %>% 
+    summarise(n = n()) %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week doing exercise") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+exercise_tab
+```
+```{r}
+#Frequency table with two variables
+#exercise and tv
+exercise_tv_tab <-
+ah_wave1_v1_subset %>% 
+    group_by(TV,
+             Exercise) %>% 
+    summarise(n = n(), .groups = "drop_last") %>% 
+    mutate(`%` = n / sum(n) * 100) %>% 
+    mutate(`%` = `%` %>% round(1)) %>% 
+    kable(caption = "Table 1: Participants' No. Occasions per week playing getting exercise by TV watching status") %>% 
+    kable_styling(full_width = FALSE, position = "left")
+exercise_tv_tab
+```
+```{r}
+#Graph
+exercise_tv_plot <-
+  ggplot(data = ah_wave1_v1_subset, mapping = aes(x = Exercise)) +
+    geom_histogram(stat = "count") + 
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    facet_grid(~TV)
+exercise_tv_plot 
+```
+
