@@ -41,6 +41,11 @@ ah_wave1_v1<- read.dta13("21600-0001-Data.dta")
 ```{r}
 #creating data frame include five variables on participants' times per week of the following activities: (1) chores, (2) hobbies, (3) television or video games, (4) sports, and (5) exercise
 ah_wave1_v1_subset <- subset(ah_wave1_v1, select = c(AID, H1DA1, H1DA2, H1DA3, H1DA5, H1DA6))
+write.csv(ah_wave1_v1_subset, "ah_wave1_v1_subset.csv")
+```
+# Use the csv file "ah_wave1_v1_subset" that is uploaded to GitHub to reproduce the following analysis.
+
+```{r}
 #create label for data frame itself
 attributes(ah_wave1_v1_subset)$label <- "Add Health Wave I Cohort Members Weekly Activities"
 ah_wave1_v1_subset %>% attributes() %>% extract("label")
@@ -146,4 +151,3 @@ exercise_tv_plot <-
     facet_grid(~TV)
 exercise_tv_plot 
 ```
-
